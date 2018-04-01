@@ -20,7 +20,7 @@ object DataSet {
 
     fun serialize() {
         try {
-            val fos = FileOutputStream("myfile")
+            val fos = FileOutputStream("fromPairs")
             val oos = ObjectOutputStream(fos)
             oos.writeObject(collection)
             oos.close()
@@ -33,7 +33,7 @@ object DataSet {
 
     fun deserialize() {
         try {
-            val fis = FileInputStream("myfile")
+            val fis = FileInputStream("fromPairs")
             val ois = ObjectInputStream(fis)
             collection = ois.readObject() as LinkedHashMap<String, Map<NGram, String>>
             ois.close()

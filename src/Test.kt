@@ -9,8 +9,8 @@ import java.security.MessageDigest
 //val baseDir = "E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21"
 const val baseDir = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
 fun main(args : Array<String>) {
-    //DataSet.deserialize()
-    //println(DataSet.collection.size)
+//    DataSet.deserialize()
+//    println(DataSet.collection.size)
 
     var pairs = File("$baseDir\\02-no-obfuscation\\pairs")
     var sourceFiles = FeatureExtractor.extractSourceNames(pairs.readLines())
@@ -22,13 +22,16 @@ fun main(args : Array<String>) {
                 .forEachIndexed { counter, hashes -> DataSet.addItem(file + "_" + counter, hashes) }
 
     }
-    //DataSet.serialize()
-    //low obfuscation
+//    DataSet.serialize()
 
-    var document = FeatureExtractor.extractWordsSets(File("$baseDir\\susp\\suspicious-document00048.txt").readText())
+    var suspToSrcMap = FeatureExtractor.computeSuspNames(pairs.readLines())
+    //low obfuscation
+    var file = File("$baseDir\\susp\\suspicious-document00048.txt")
+    var document = FeatureExtractor.extractWordsSets(file.readText())
+    var totalFound = ArrayList<String>()
     for (list in document) {
         var hashesInput = Shingling.createShingles(list)
-        Shingling.compareAgainstDataset(hashesInput)
+        totalFound.addAll(Shingling.compareAgainstDataset(hashesInput))
     }
     //var document2 = FeatureExtractor.extractWords(File("E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21\\src\\source-document03043.txt").readText())
     //var hashesData = Shingling.createShingles(document2)
@@ -36,13 +39,27 @@ fun main(args : Array<String>) {
 //    DataSet.serialize()
 
     //Shingling.test(document, document2)
-    var dir = File("$baseDir\\susp")
-    for (file in dir.listFiles()) {
-        println(file.name)
-        var data = FeatureExtractor.extractWords(file.readText())
-        var hashes = Shingling.createShingles(data)
-        Shingling.compareAgainstDataset(hashes)
+    var correct = 0
+    var correctN = 0
+    var total = 0
+    var incorrect = 0
+    for (suspFile in FeatureExtractor.extractSuspNames(pairs.readLines())) {
+        var file = File("$baseDir\\susp\\$suspFile")
+        var document = FeatureExtractor.extractWordsSets(file.readText())
+        var totalFound = ArrayList<String>()
+        for (list in document) {
+            var hashesInput = Shingling.createShingles(list)
+            totalFound.addAll(Shingling.compareAgainstDataset(hashesInput))
+        }
+        val needed = suspToSrcMap[file.name]!!
+        total += needed.size
+        if (totalFound.containsAll(needed))
+            correct++
+        else
+            incorrect++
+        correctN += needed.size - needed.subtract(totalFound).size
     }
+    println("$correct $incorrect")
 
     //println(Shingling.compareShingles(hashesInput, hashesData))
 

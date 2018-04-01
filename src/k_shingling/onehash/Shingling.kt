@@ -9,7 +9,7 @@ import kotlin.collections.LinkedHashMap
 
 object Shingling {
     val SHINGLE_LENGTH = 5
-    val MIN_COUNT = 200
+    val MIN_COUNT = 100
     val WINDOW_SIZE = 30
 
     fun createShingles(words: ArrayList<Word>): Map<NGram, String> {
@@ -40,20 +40,23 @@ object Shingling {
         map.putAll(items)
         return map
     }
-    fun compareAgainstDataset(input: Map<NGram, String>) {
+    fun compareAgainstDataset(input: Map<NGram, String>): ArrayList<String> {
+        var found = ArrayList<String>()
         for (item in DataSet.collection) {
             if (compareDocuments(input, item.value)) {
+                found.add(item.key.substring(0, item.key.length - 2))
                 println(item.key)
                 println()
             }
         }
+        return found
     }
 
     fun compareDocuments(input: Map<NGram, String>, data: Map<NGram, String>): Boolean {
         var suspicious = input
         var inputMin = getMinShingles(suspicious)
         var dataMin = getMinShingles(data)
-        if (compareShingles(inputMin, dataMin) > 0.04) {
+        if (compareShingles(inputMin, dataMin) > 0.03) {
             //println("Suspicious")
             var paragraphStart = -1
             var paragraphEnd = -1
@@ -93,7 +96,7 @@ object Shingling {
             if (entry.value in data.values)
                 count++
         }
-        return count.toDouble() / input.size
+        return count.toDouble() / min(input.size, data.values.size)
     }
 
 }

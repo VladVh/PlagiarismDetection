@@ -8,7 +8,7 @@ object FeatureExtractor {
     private val stopWords:List<String> = File("stopwords.txt")
             .readText().split("\r\n")
     val delimiters = ",.!?%^*()0123456789"
-    val subSetLength = 10000
+    val subSetLength = 5000
 
     fun extractWordFeatures(text : List<String>): Pair<Int, HashMap<String, Int>> {
         var totalWords = 0
@@ -98,5 +98,20 @@ object FeatureExtractor {
         var names = TreeSet<String>()
         pairs.map { item -> names.add(item.split(" ")[0]) }
         return names
+    }
+
+    fun computeSuspNames(pairs: List<String>): Map<String, List<String>> {
+        var map = HashMap<String, List<String>>()
+        var list = ArrayList<String>()
+        for (pair in pairs) {
+            var susp = pair.split(" ")[0]
+            var src = pair.split(" ")[1]
+            if (!map.containsKey(susp)) {
+                map[susp] = arrayListOf(src)
+            } else {
+                map[susp] = map[susp]?.plus(src)!!
+            }
+        }
+        return map
     }
 }
