@@ -1,32 +1,35 @@
 import k_shingling.onehash.DataSet
 import k_shingling.onehash.Shingling
-import naivebayes.FeatureExtractor
-import stopwords.StopWordsPlagiarismDetector
+import k_shingling.onehash.FeatureExtractor
 import java.io.File
-import javax.xml.parsers.DocumentBuilderFactory
-import java.security.MessageDigest
 
-//val baseDir = "E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21"
-const val baseDir = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
+const val BASE_DIR = "E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21"
+//const val BASE_DIR = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
 fun main(args : Array<String>) {
 //    DataSet.deserialize()
 //    println(DataSet.collection.size)
 
-    var pairs = File("$baseDir\\02-no-obfuscation\\pairs")
+    var pairs = File("$BASE_DIR\\02-no-obfuscation\\pairs")
     var sourceFiles = FeatureExtractor.extractSourceNames(pairs.readLines())
     for (file in sourceFiles) {
-        var path = "$baseDir\\src\\$file"
-        var wordSets = FeatureExtractor.extractWordsSets(File(path).readText())
+        var path = "$BASE_DIR\\src\\$file"
+        var data = File(path).readText()
+
+        var uniqueWords = FeatureExtractor.getUniqueWords(data)
+        DataSet.addWords(uniqueWords)
+
+        var wordSets = FeatureExtractor.extractWordsSets(data)
         wordSets
                 .map { Shingling.createShingles(it) }
                 .forEachIndexed { counter, hashes -> DataSet.addItem(file + "_" + counter, hashes) }
 
     }
-//    DataSet.serialize()
+    DataSet.findHighIdfWords()
+    DataSet.serialize()
 
-    var suspToSrcMap = FeatureExtractor.computeSuspNames(pairs.readLines())
+    var suspToSrcMap = FeatureExtractor.getSuspNamesMap(pairs.readLines())
     //low obfuscation
-    var file = File("$baseDir\\susp\\suspicious-document00048.txt")
+    var file = File("$BASE_DIR\\susp\\suspicious-document00048.txt")
     var document = FeatureExtractor.extractWordsSets(file.readText())
     var totalFound = ArrayList<String>()
     for (list in document) {
@@ -44,7 +47,7 @@ fun main(args : Array<String>) {
     var total = 0
     var incorrect = 0
     for (suspFile in FeatureExtractor.extractSuspNames(pairs.readLines())) {
-        var file = File("$baseDir\\susp\\$suspFile")
+        var file = File("$BASE_DIR\\susp\\$suspFile")
         var document = FeatureExtractor.extractWordsSets(file.readText())
         var totalFound = ArrayList<String>()
         for (list in document) {
