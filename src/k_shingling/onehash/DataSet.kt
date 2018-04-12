@@ -30,7 +30,7 @@ object DataSet {
         }
     }
 
-    private fun computeIdf(freq: Int) = log2(collection.size.toDouble() / freq)
+    private fun computeIdf(freq: Int) = log2(wordsFreq.size.toDouble() / freq)
 
     fun findHighIdfWords() {
         for ((key, value) in wordsFreq) {

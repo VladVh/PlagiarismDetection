@@ -2,6 +2,9 @@ import k_shingling.onehash.DataSet
 import k_shingling.onehash.Shingling
 import k_shingling.onehash.FeatureExtractor
 import lucene.LuceneIndex
+import org.apache.lucene.analysis.standard.StandardAnalyzer
+import org.apache.lucene.util.QueryBuilder
+import stopwords.Word
 import java.io.File
 
 const val BASE_DIR = "E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21"
@@ -10,53 +13,43 @@ fun main(args : Array<String>) {
 
 //    DataSet.deserialize()
 //    println(DataSet.collection.size)
-    var pairs = File("$BASE_DIR\\02-no-obfuscation\\pairs")
-    var sourceFiles = FeatureExtractor.extractSourceNames(pairs.readLines())
-    for (file in sourceFiles) {
-        var path = "$BASE_DIR\\src\\$file"
-        var data = File(path).readText()
-
-        var wordSets = FeatureExtractor.extractWordsSets(data)
-        wordSets
-                .map { Shingling.createShingles(it) }
-                .forEachIndexed { counter, hashes -> DataSet.addItem(file + "_" + counter, hashes) }
-
-    }
-    DataSet.findHighIdfWords()
-    DataSet.serialize()
-
-
-//    var file = File("$BASE_DIR\\susp\\suspicious-document00048.txt")
-//    var document = FeatureExtractor.extractWordsSets(file.readText())
-//    var totalFound = ArrayList<String>()
-//    for (list in document) {
-//        var hashesInput = Shingling.createShingles(list)
-//        totalFound.addAll(Shingling.compareAgainstDataset(hashesInput))
+//    var pairs = File("$BASE_DIR\\02-no-obfuscation\\pairs")
+//    var sourceFiles = FeatureExtractor.extractSourceNames(pairs.readLines())
+//    for (file in sourceFiles) {
+//        var path = "$BASE_DIR\\src\\$file"
+//        var data = File(path).readText()
+//
+//        var wordSets = FeatureExtractor.extractWordsSets(data)
+//        wordSets
+//                .map { Shingling.createShingles(it) }
+//                .forEachIndexed { counter, hashes -> DataSet.addItem(file + "_" + counter, hashes) }
+//
 //    }
-
-    var correct = 0
-    var correctN = 0
-    var total = 0
-    var incorrect = 0
-    var suspToSrcMap = FeatureExtractor.getSuspNamesMap(pairs.readLines())
-
-    for (suspFile in FeatureExtractor.extractSuspNames(pairs.readLines())) {
-        var file = File("$BASE_DIR\\susp\\$suspFile")
-        var document = FeatureExtractor.extractWordsSets(file.readText())
-        var totalFound = ArrayList<String>()
-        for (list in document) {
-            var hashesInput = Shingling.createShingles(list)
-            totalFound.addAll(Shingling.compareAgainstDataset(hashesInput))
-        }
-        val needed = suspToSrcMap[file.name]!!
-        total += needed.size
-        if (totalFound.containsAll(needed))
-            correct++
-        else
-            incorrect++
-        correctN += needed.size - needed.subtract(totalFound).size
-    }
-    println("$correct $incorrect")
+//    DataSet.serialize()
+//
+//    var correct = 0
+//    var correctN = 0
+//    var total = 0
+//    var incorrect = 0
+//    var suspToSrcMap = FeatureExtractor.getSuspNamesMap(pairs.readLines())
+//
+//    for (suspFile in FeatureExtractor.extractSuspNames(pairs.readLines())) {
+//        var file = File("$BASE_DIR\\susp\\$suspFile")
+//        var document = FeatureExtractor.extractWordsSets(file.readText())
+//        var totalFound = ArrayList<String>()
+//        for (list in document) {
+//            var hashesInput = Shingling.createShingles(list)
+//            totalFound.addAll(Shingling.compareAgainstDataset(hashesInput))
+//        }
+//        val needed = suspToSrcMap[file.name]!!
+//        total += needed.size
+//        if (totalFound.containsAll(needed))
+//            correct++
+//        else
+//            incorrect++
+//        correctN += needed.size - needed.subtract(totalFound).size
+//    }
+//    println("$correct $incorrect")
 
 
     //lucene
@@ -65,15 +58,23 @@ fun main(args : Array<String>) {
     for (file in folder.listFiles()) {
         var uniqueWords = FeatureExtractor.getUniqueWords(file.readText())
         DataSet.addWords(uniqueWords)
+        lucene.indexDocument(file.readText())
     }
     DataSet.findHighIdfWords()
 
     for (file in folder.listFiles()) {
         var data = FeatureExtractor.extractWords(file.readText())
         data.removeIf { item -> !DataSet.wordsSorted.contains(item.text) }
-        lucene.indexDocument(data)
+        //lucene.indexDocument(data)
     }
-    lucene.search("country")
+    lucene.search("+wonders serious")
+
+    var word1 = Word("wonders", 1, 2)
+    var word2 = Word("mention", 1, 2)
+    var word3 = Word("serious", 1, 2)
+    var query2 = lucene.createQuery(arrayListOf(word1, word2, word3))
+    var result = lucene.search(query2)
+    println(result)
     //println(Shingling.compareShingles(hashesInput, hashesData))
 
 
