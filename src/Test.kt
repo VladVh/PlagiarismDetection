@@ -2,6 +2,10 @@ import k_shingling.onehash.DataSet
 import k_shingling.onehash.Shingling
 import k_shingling.onehash.FeatureExtractor
 import lucene.LuceneIndex
+import net.didion.jwnl.JWNL
+import net.didion.jwnl.data.IndexWord
+import net.didion.jwnl.data.POS
+import net.didion.jwnl.dictionary.Dictionary
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.util.QueryBuilder
 import stopwords.Word
@@ -54,26 +58,49 @@ fun main(args : Array<String>) {
 
     //lucene
     var lucene = LuceneIndex()
-    var folder = File("$BASE_DIR\\test")
+    var folder = File("$BASE_DIR\\src")
+    //var folder = File("$BASE_DIR\\test")
     for (file in folder.listFiles()) {
         var uniqueWords = FeatureExtractor.getUniqueWords(file.readText())
         DataSet.addWords(uniqueWords)
-        lucene.indexDocument(file.readText())
+
     }
     DataSet.findHighIdfWords()
 
     for (file in folder.listFiles()) {
         var data = FeatureExtractor.extractWords(file.readText())
         data.removeIf { item -> !DataSet.wordsSorted.contains(item.text) }
-        //lucene.indexDocument(data)
+        lucene.indexDocument(file.readText(), file.name)
     }
-    lucene.search("+wonders serious")
+
+    var words = FeatureExtractor.extractWords(
+            File("E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21\\susp\\suspicious-document00005.txt")
+                    .readText())
+    words.removeIf { !DataSet.wordsSorted.contains(it.text) }
+    lucene.checkSuspiciousDocument(words)
+    //lucene.search("+wonders serious")
 
     var word1 = Word("wonders", 1, 2)
     var word2 = Word("mention", 1, 2)
-    var word3 = Word("serious", 1, 2)
-    var query2 = lucene.createQuery(arrayListOf(word1, word2, word3))
+    var word3 = Word("while", 1, 2)
+    var word4 = Word("worth", 1, 2)
+    var word5 = Word("he", 1, 2)
+    var word6 = Word("happens", 1, 2)
+    var word7 = Word("be", 1, 2)
+    var word8 = Word("wishes", 1, 2)
+    var word9 = Word("serious", 1, 2)
+    var word10 = Word("legitimate", 1, 2)
+    var query2 = lucene.createQuery(arrayListOf(word1, word2, word3, word4, word5, word6, word8, word9, word10))
     var result = lucene.search(query2)
+
+//    JWNL.initialize(null)
+//    val dictionary = Dictionary.getInstance()
+//    val word = dictionary.getIndexWord(POS.ADJECTIVE, "bend")
+//    val senseCount = word.senseCount
+//    for (i in 1..senseCount) {
+//        println(word.getSense(i).words)
+//    }
+
     println(result)
     //println(Shingling.compareShingles(hashesInput, hashesData))
 
