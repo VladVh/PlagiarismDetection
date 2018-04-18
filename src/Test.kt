@@ -10,6 +10,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.util.QueryBuilder
 import stopwords.Word
 import java.io.File
+import kotlin.system.measureTimeMillis
 
 const val BASE_DIR = "E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21"
 //const val BASE_DIR = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
@@ -17,7 +18,7 @@ fun main(args : Array<String>) {
 
 //    DataSet.deserialize()
 //    println(DataSet.collection.size)
-//    var pairs = File("$BASE_DIR\\02-no-obfuscation\\pairs")
+    var pairs = File("$BASE_DIR\\02-no-obfuscation\\pairs")
 //    var sourceFiles = FeatureExtractor.extractSourceNames(pairs.readLines())
 //    for (file in sourceFiles) {
 //        var path = "$BASE_DIR\\src\\$file"
@@ -74,24 +75,41 @@ fun main(args : Array<String>) {
     }
 
     var words = FeatureExtractor.extractWords(
-            File("E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21\\susp\\suspicious-document00005.txt")
+            File("E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21\\susp\\suspicious-document00027.txt")
                     .readText())
     words.removeIf { !DataSet.wordsSorted.contains(it.text) }
-    lucene.checkSuspiciousDocument(words)
+
+    var time = measureTimeMillis {
+        lucene.checkSuspiciousDocument(words)
+    }
+    println(time)
+
+    var correct = 0
+    var correctN = 0
+    var total = 0
+    var incorrect = 0
+    var suspToSrcMap = FeatureExtractor.getSuspNamesMap(pairs.readLines())
+
+    for (suspFile in FeatureExtractor.extractSuspNames(pairs.readLines())) {
+        var file = File("$BASE_DIR\\susp\\$suspFile")
+         var document = FeatureExtractor.extractWords(file.readText())
+        var totalFound = lucene.checkSuspiciousDocument(document)
+
+        val needed = suspToSrcMap[file.name]!!
+        total += needed.size
+        if (totalFound.containsAll(needed))
+            correct++
+        else
+            incorrect++
+        correctN += needed.size - needed.subtract(totalFound).size
+    }
+    println("$correct $incorrect")
+
+
+
+
     //lucene.search("+wonders serious")
 
-    var word1 = Word("wonders", 1, 2)
-    var word2 = Word("mention", 1, 2)
-    var word3 = Word("while", 1, 2)
-    var word4 = Word("worth", 1, 2)
-    var word5 = Word("he", 1, 2)
-    var word6 = Word("happens", 1, 2)
-    var word7 = Word("be", 1, 2)
-    var word8 = Word("wishes", 1, 2)
-    var word9 = Word("serious", 1, 2)
-    var word10 = Word("legitimate", 1, 2)
-    var query2 = lucene.createQuery(arrayListOf(word1, word2, word3, word4, word5, word6, word8, word9, word10))
-    var result = lucene.search(query2)
 
 //    JWNL.initialize(null)
 //    val dictionary = Dictionary.getInstance()
@@ -101,7 +119,6 @@ fun main(args : Array<String>) {
 //        println(word.getSense(i).words)
 //    }
 
-    println(result)
     //println(Shingling.compareShingles(hashesInput, hashesData))
 
 
