@@ -10,5 +10,6 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="lucene-queries-7.2.1" level="project" />
     <orderEntry type="library" name="jwnl" level="project" />
+    <orderEntry type="library" name="solr-solrj-7.3.0" level="project" />
   </component>
 </module>

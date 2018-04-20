@@ -15,7 +15,7 @@ object DataSet {
     var collection = LinkedHashMap<String, Map<NGram, String>>()
     var wordsFreq = HashMap<String, Int>()
     var wordsSorted = TreeSet<String>()
-    val idfThreshold = 8
+    val idfThreshold = 5
 
     fun addItem(name: String, shingling: Map<NGram, String>) {
         collection.putIfAbsent(name, shingling)

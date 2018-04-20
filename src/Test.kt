@@ -8,6 +8,7 @@ import net.didion.jwnl.data.POS
 import net.didion.jwnl.dictionary.Dictionary
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.util.QueryBuilder
+import solr.SolrjIndex
 import stopwords.Word
 import java.io.File
 import kotlin.system.measureTimeMillis
@@ -18,7 +19,7 @@ fun main(args : Array<String>) {
 
 //    DataSet.deserialize()
 //    println(DataSet.collection.size)
-    var pairs = File("$BASE_DIR\\02-no-obfuscation\\pairs")
+    var pairs = File("$BASE_DIR\\03-random-obfuscation\\pairs")
 //    var sourceFiles = FeatureExtractor.extractSourceNames(pairs.readLines())
 //    for (file in sourceFiles) {
 //        var path = "$BASE_DIR\\src\\$file"
@@ -58,54 +59,58 @@ fun main(args : Array<String>) {
 
 
     //lucene
-    var lucene = LuceneIndex()
-    var folder = File("$BASE_DIR\\src")
-    //var folder = File("$BASE_DIR\\test")
-    for (file in folder.listFiles()) {
-        var uniqueWords = FeatureExtractor.getUniqueWords(file.readText())
-        DataSet.addWords(uniqueWords)
+//    var lucene = LuceneIndex()
+//    var folder = File("$BASE_DIR\\src")
+//    //var folder = File("$BASE_DIR\\test")
+//    for (file in folder.listFiles()) {
+//        var uniqueWords = FeatureExtractor.getUniqueWords(file.readText())
+//        DataSet.addWords(uniqueWords)
+//
+//    }
+//    DataSet.findHighIdfWords()
+//
+//    for (file in folder.listFiles()) {
+//        var data = FeatureExtractor.extractWords(file.readText())
+//        data.removeIf { item -> !DataSet.wordsSorted.contains(item.text) }
+//        lucene.indexDocument(data, file.name)
+//    }
+//
+//    var words = FeatureExtractor.extractWords(
+//            File("E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21\\susp\\suspicious-document00027.txt")
+//                    .readText())
+//    words.removeIf { !DataSet.wordsSorted.contains(it.text) }
+//    lucene.checkSuspiciousDocument(words)
+//
+//
+//    var correct = 0
+//    var correctN = 0
+//    var total = 0
+//    var incorrect = 0
+//    var suspToSrcMap = FeatureExtractor.getSuspNamesMap(pairs.readLines())
+//
+//    for (suspFile in FeatureExtractor.extractSuspNames(pairs.readLines())) {
+//        var file = File("$BASE_DIR\\susp\\$suspFile")
+//        var document = FeatureExtractor.extractWords(file.readText())
+//        document.removeIf { item -> !DataSet.wordsSorted.contains(item.text) }
+//
+//        var totalFound = lucene.checkSuspiciousDocument(document)
+//
+//        val needed = suspToSrcMap[file.name]!!
+//        total += needed.size
+//        if (totalFound.containsAll(needed))
+//            correct++
+//        else
+//            incorrect++
+//        correctN += needed.size - needed.subtract(totalFound).size
+//    }
+//    println("$correct $incorrect")
+//    println("$correctN $total")
 
-    }
-    DataSet.findHighIdfWords()
 
-    for (file in folder.listFiles()) {
-        var data = FeatureExtractor.extractWords(file.readText())
-        data.removeIf { item -> !DataSet.wordsSorted.contains(item.text) }
-        lucene.indexDocument(file.readText(), file.name)
-    }
-
-    var words = FeatureExtractor.extractWords(
-            File("E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21\\susp\\suspicious-document00027.txt")
-                    .readText())
-    words.removeIf { !DataSet.wordsSorted.contains(it.text) }
-
-    var time = measureTimeMillis {
-        lucene.checkSuspiciousDocument(words)
-    }
-    println(time)
-
-    var correct = 0
-    var correctN = 0
-    var total = 0
-    var incorrect = 0
-    var suspToSrcMap = FeatureExtractor.getSuspNamesMap(pairs.readLines())
-
-    for (suspFile in FeatureExtractor.extractSuspNames(pairs.readLines())) {
-        var file = File("$BASE_DIR\\susp\\$suspFile")
-         var document = FeatureExtractor.extractWords(file.readText())
-        var totalFound = lucene.checkSuspiciousDocument(document)
-
-        val needed = suspToSrcMap[file.name]!!
-        total += needed.size
-        if (totalFound.containsAll(needed))
-            correct++
-        else
-            incorrect++
-        correctN += needed.size - needed.subtract(totalFound).size
-    }
-    println("$correct $incorrect")
-
-
+    var solr = SolrjIndex()
+    solr.clearCollection()
+    solr.indexFolder("E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21\\test")
+    solr.search()
 
 
     //lucene.search("+wonders serious")

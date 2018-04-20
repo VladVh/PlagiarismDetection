@@ -24,9 +24,12 @@ class LuceneIndex {
         indexWriter = IndexWriter(index, config)
     }
 
-    fun indexDocument(data: List<Word>) {
+    fun indexDocument(data: List<Word>, name: String) {
         val document = Document()
-        data.forEach { item -> document.add(TextField(item.text, item.text, Field.Store.YES)) }
+        val text = data.joinToString(separator = " ")
+        document.add(TextField("content", text, Field.Store.YES))
+        //data.forEach { item -> document.add(TextField(item.text, item.text, Field.Store.YES)) }
+        document.add(TextField("name", name, Field.Store.YES))
         indexWriter.addDocument(document)
         indexWriter.commit()
     }
