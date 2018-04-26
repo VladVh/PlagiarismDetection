@@ -1,14 +1,39 @@
 package k_shingling.onehash
 
+import net.didion.jwnl.JWNL
+import net.didion.jwnl.data.POS
+import net.didion.jwnl.dictionary.Dictionary
 import stopwords.Word
 import java.io.File
+import java.io.FileInputStream
 import java.util.TreeSet
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.Set
+import kotlin.collections.arrayListOf
+import kotlin.collections.count
+import kotlin.collections.filter
+import kotlin.collections.getValue
+import kotlin.collections.isNotEmpty
+import kotlin.collections.map
+import kotlin.collections.plus
+import kotlin.collections.set
+import kotlin.collections.toSet
+import kotlin.collections.withIndex
 
-object FeatureExtractor {
+class FeatureExtractor {
+
+    init {
+        JWNL.initialize(FileInputStream("properties.xml"))
+    }
+
     private val stopWords:List<String> = File("stopwords.txt")
             .readText().split("\r\n")
     val delimiters = ",.!?%^*()0123456789"
     val subSetLength = 5000
+    val dictionary = Dictionary.getInstance()
 
     fun extractWordFeatures(text : List<String>): Pair<Int, HashMap<String, Int>> {
         var totalWords = 0
@@ -28,6 +53,25 @@ object FeatureExtractor {
         }
         return Pair(totalWords, wordCount)
     }
+
+
+    fun normalizeDocument(words: List<Word>):ArrayList<Word> {
+        var changedWords = words
+        var posList = POS.getAllPOS() as List<POS?>
+        for (word in changedWords) {
+            if (word.text.length < 30) {
+                for (pos in posList) {
+                    var baseForms = dictionary.morphologicalProcessor.lookupBaseForm(pos, word.text)
+                    if (baseForms != null) {
+                        word.text = baseForms.lemma
+                        break
+                    }
+                }
+            }
+        }
+        return changedWords as ArrayList<Word>
+    }
+
 
     fun extractWords(document: String): ArrayList<Word> {
 //        println(document.substring(159373, 159450))

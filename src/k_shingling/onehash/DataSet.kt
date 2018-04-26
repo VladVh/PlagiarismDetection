@@ -21,7 +21,7 @@ object DataSet {
         collection.putIfAbsent(name, shingling)
     }
 
-    fun addWords(words: Set<Word>) {
+    fun addWords(words: List<Word>) {
         for (word in words) {
             if (wordsFreq.containsKey(word.text))
                 wordsFreq[word.text] = wordsFreq[word.text]!! + 1

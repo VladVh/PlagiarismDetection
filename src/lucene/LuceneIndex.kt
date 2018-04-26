@@ -7,9 +7,19 @@ import org.apache.lucene.document.TextField
 import org.apache.lucene.index.*
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
+import org.apache.lucene.search.spans.*
 import org.apache.lucene.store.Directory
 import org.apache.lucene.store.RAMDirectory
 import stopwords.Word
+import org.apache.lucene.search.spans.SpanWeight
+import org.apache.lucene.search.spans.SpanTermQuery
+
+
+//class MyFldType: FieldType() {
+//    constructor() {
+//        this.setIndexOptions(org.apache.lucene.index.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS)
+//    }
+//}
 
 class LuceneIndex {
     private val analyzer: StandardAnalyzer = StandardAnalyzer()
@@ -19,7 +29,7 @@ class LuceneIndex {
     private lateinit var indexReader: IndexReader
     private lateinit var indexSearcher: IndexSearcher
     init {
-        config = IndexWriterConfig(analyzer)
+        config = IndexWriterConfig( analyzer)
         index = RAMDirectory()
         indexWriter = IndexWriter(index, config)
     }
@@ -27,43 +37,87 @@ class LuceneIndex {
     fun indexDocument(data: List<Word>, name: String) {
         val document = Document()
         val text = data.joinToString(separator = " ")
-        document.add(TextField("content", text, Field.Store.YES))
+        document.add(TextField("content", text, Field.Store.NO))
+        document.add(TextField("name", name, Field.Store.YES))
         //data.forEach { item -> document.add(TextField(item.text, item.text, Field.Store.YES)) }
-        document.add(TextField("name", name, Field.Store.YES))
+//        document.add(Field("content", text, Field.Store.NO, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS))
+//        document.add(Field("name", name, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS))
+
         indexWriter.addDocument(document)
         indexWriter.commit()
     }
 
-    fun indexDocument(data: String, name: String) {
-        val document = Document()
-        document.add(TextField("content", data, Field.Store.YES))
-        document.add(TextField("name", name, Field.Store.YES))
-        indexWriter.addDocument(document)
-        indexWriter.commit()
-    }
+//    fun indexDocument(data: String, name: String) {
+//        val document = Document()
+//        document.add(TextField("content", data, Field.Store.NO))
+//        document.add(TextField("name", name, Field.Store.YES))
+//        indexWriter.addDocument(document)
+//        indexWriter.commit()
+//    }
 
-    fun search(searchQuery: String) {
+    fun searchTest(searchQuery: String) {
         indexReader = DirectoryReader.open(index)
         indexSearcher = IndexSearcher(indexReader)
 
-        var queryParser = QueryParser("", StandardAnalyzer())
-        val term1 =  Term("content", "mention")
-        val term2 =  Term("content", "wishes")
-        val term3 = Term("content", "simmers")
+        var spanQuery:SpanQuery = SpanTermQuery(Term("content", "find"))
 
-        var phraseQuery = PhraseQuery.Builder()
-        phraseQuery.add(term3)
-        phraseQuery.add(term2)
-        phraseQuery.add(term1)
 
-        phraseQuery.setSlop(20) //distinct words between
-        var res = indexSearcher.search(phraseQuery.build(), 5)
+        var complexQuery = SpanNearQuery( arrayOf(
+                SpanTermQuery(Term("content", "find")),
+                SpanTermQuery(Term("content", "council")),
+                SpanTermQuery(Term("content", "met")),
+                SpanTermQuery(Term("content", "unionists")),
+                SpanTermQuery(Term("content", "constituted"))),
+                13,
+                false)
+        var result = indexSearcher.search(complexQuery, 10000)
 
-        var booleanQuery = BooleanQuery.Builder()
-        booleanQuery.add(TermQuery(term1), BooleanClause.Occur.SHOULD)
+        var leaves = indexReader.leaves()
+        val ctx = leaves[0]
+        val spanWeight = spanQuery.createWeight(indexSearcher, false, 1.0F)
+        val spans = spanWeight.getSpans(ctx, SpanWeight.Postings.POSITIONS)
+        while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+            while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                println(spans.startPosition())
+                println(spans.endPosition())
+            }
+        }
 
+        //3.6.2
+//        var queryParser = QueryParser("", StandardAnalyzer())
+//        val term1 =  Term("content", "mention")
+//        val term2 =  Term("content", "wishes")
+//        val term3 = Term("content", "simmers")
         println()
     }
+    fun search(words: List<Word>): TopDocs? {
+        indexReader = DirectoryReader.open(index)
+        indexSearcher = IndexSearcher(indexReader)
+
+        var spanQueries = arrayListOf<SpanQuery>()
+        words.forEach { spanQueries.add(SpanTermQuery(Term("content", it.text))) }
+        var spanComplexQuery = SpanNearQuery(spanQueries.toArray(arrayOf()), 100, false)
+        return indexSearcher.search(spanComplexQuery, 100)
+//        var intersection: ArrayList<Int>? = null
+//        for (word in words) {
+//            var spanQuery:SpanQuery = SpanTermQuery(Term("content", word.text))
+//            val results = indexSearcher.search(spanQuery, 10000)
+//
+//            if (results.totalHits > 0) {
+//                if (intersection == null) {
+//                    intersection = ArrayList()
+//                    intersection.addAll(results.scoreDocs.map { it.doc })
+//                } else {
+//                    intersection.removeIf { it -> results.scoreDocs.none { item -> item.doc == it } }
+//                }
+//            }
+//        }
+//
+//        var leaves = indexReader.leaves()
+//        val ctx = leaves[0]
+        //val spanWeight = spanQuery.createWeight(indexSearcher, false, 1.0F)
+    }
+
 
     fun search(query: Query): TopDocs? {
         indexReader = DirectoryReader.open(index)
@@ -87,7 +141,8 @@ class LuceneIndex {
             }
 
             val query = createQuery(paragraph.subList(0,9))
-            val results = search(query)
+            val results = search(paragraph.subList(0, 9))
+            //val results = search(query)
             if (results?.totalHits ?: 0 > 0) {
                 var docs = extractDocsByIds(results?.scoreDocs!!)
                 var intersection = emptySet<String>()
@@ -145,12 +200,12 @@ class LuceneIndex {
     }
 
     fun createQuery (words : List<Word>):Query {
-//        var queryString = "${words[0].text}:${words[0].text}"
-//        for (i in 1 until words.size) {
-//            queryString = queryString.plus(" AND ${words[i].text}:${words[i].text}")
-//        }
-//        //queryString = queryString.plus(" ~30")
-//        val queryParser = QueryParser("", StandardAnalyzer())
+        var queryString = "${words[0].text}:${words[0].text}"
+        for (i in 1 until words.size) {
+            queryString = queryString.plus(" AND ${words[i].text}:${words[i].text}")
+        }
+        //queryString = queryString.plus(" ~30")
+        val queryParser = QueryParser("", StandardAnalyzer())
 
         var phraseQuery = PhraseQuery.Builder()
         words.forEach { phraseQuery.add(Term("content", it.text)) }

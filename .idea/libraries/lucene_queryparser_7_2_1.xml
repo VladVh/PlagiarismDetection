@@ -1,10 +1,11 @@
 <component name="libraryTable">
-  <library name="lucene-queries-7.2.1">
+  <library name="lucene-queryparser-7.2.1">
     <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../lucene-7.2.1/queryparser/lucene-queryparser-7.2.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/../lucene-7.2.1/queries/lucene-queries-7.2.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/../lucene-7.2.1/expressions/lucene-expressions-7.2.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/../lucene-7.2.1/core/lucene-core-7.2.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../lucene-7.2.1/queryparser/lucene-queryparser-7.2.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../lucene-7.2.1/analysis/common/lucene-analyzers-common-7.2.1.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
