@@ -133,15 +133,15 @@ class LuceneIndex {
         var start = -1
         var end = 0
         var sourceDocs:List<String> = ArrayList<String>()
-        while (wordsList.size > 9) {
+        while (wordsList.size > 7) {
             val paragraph: List<Word> = if (wordsList.size > instanceSize)
                 wordsList.take(instanceSize)
             else {
                 wordsList.subList(0, wordsList.size)
             }
 
-            val query = createQuery(paragraph.subList(0,9))
-            val results = search(paragraph.subList(0, 9))
+            //val query = createQuery(paragraph.subList(0,7))
+            val results = search(paragraph.subList(0, 6))
             //val results = search(query)
             if (results?.totalHits ?: 0 > 0) {
                 var docs = extractDocsByIds(results?.scoreDocs!!)

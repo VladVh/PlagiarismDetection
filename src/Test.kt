@@ -2,14 +2,6 @@ import k_shingling.onehash.DataSet
 import k_shingling.onehash.Shingling
 import k_shingling.onehash.FeatureExtractor
 import lucene.LuceneIndex
-import net.didion.jwnl.JWNL
-import net.didion.jwnl.data.IndexWord
-import net.didion.jwnl.data.POS
-import net.didion.jwnl.data.relationship.Relationship
-import net.didion.jwnl.data.relationship.RelationshipFinder
-import net.didion.jwnl.dictionary.Dictionary
-import org.apache.lucene.analysis.standard.StandardAnalyzer
-import solr.SolrjIndex
 import stopwords.Word
 import java.io.File
 import java.io.FileInputStream
