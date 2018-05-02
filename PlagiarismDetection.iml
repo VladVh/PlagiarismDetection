@@ -10,5 +10,6 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="jwnl" level="project" />
     <orderEntry type="library" name="lucene-queryparser-7.2.1" level="project" />
+    <orderEntry type="library" name="stanford-postagger" level="project" />
   </component>
 </module>

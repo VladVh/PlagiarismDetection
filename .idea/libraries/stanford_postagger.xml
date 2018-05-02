@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="stanford-postagger">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../Диплом/stanford-postagger-2018-02-27/stanford-postagger.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../Диплом/stanford-postagger-2018-02-27/stanford-postagger-3.9.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

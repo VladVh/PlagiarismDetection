@@ -1,11 +1,12 @@
 package k_shingling.onehash
 
+import edu.stanford.nlp.ling.TaggedWord
+import edu.stanford.nlp.tagger.maxent.MaxentTagger
 import net.didion.jwnl.JWNL
 import net.didion.jwnl.data.POS
 import net.didion.jwnl.dictionary.Dictionary
 import stopwords.Word
-import java.io.File
-import java.io.FileInputStream
+import java.io.*
 import java.util.TreeSet
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -34,6 +35,27 @@ class FeatureExtractor {
     val delimiters = ",.!?%^*()0123456789"
     val subSetLength = 5000
     val dictionary = Dictionary.getInstance()
+    val tagger = MaxentTagger("english-bidirectional-distsim.tagger")
+
+
+    fun getDocumentPOS(path: String) {
+        val reader = BufferedReader(FileReader(path))
+        val tokenizedText = MaxentTagger.tokenizeText(reader)
+        for (sentence in tokenizedText) {
+            val taggedWords = tagger.tagSentence(sentence)
+
+        }
+    }
+
+    private fun getWordsWithPos(taggedWords: List<TaggedWord>): List<Word> {
+        val words = ArrayList<Word>()
+        for (taggedWord in taggedWords) {
+            if (!stopWords.contains(taggedWord.word().toLowerCase())) {
+                words.add(Word(taggedWord.word(), taggedWord.beginPosition(), taggedWord.endPosition()))
+            }
+        }
+        return words
+    }
 
     fun extractWordFeatures(text : List<String>): Pair<Int, HashMap<String, Int>> {
         var totalWords = 0
