@@ -2,6 +2,8 @@ package k_shingling.onehash
 
 import edu.stanford.nlp.ling.TaggedWord
 import edu.stanford.nlp.tagger.maxent.MaxentTagger
+import edu.stanford.nlp.tagger.maxent.MaxentTaggerGUI
+import edu.stanford.nlp.tagger.maxent.MaxentTaggerServer
 import net.didion.jwnl.JWNL
 import net.didion.jwnl.data.IndexWord
 import net.didion.jwnl.data.POS
@@ -27,17 +29,29 @@ class FeatureExtractor {
     val delimiters = ",.!?%^*()0123456789"
     private val subSetLength = 5000
     private val dictionary = Dictionary.getInstance()
-    private val tagger = MaxentTagger("english-bidirectional-distsim.tagger")
+    private var tagger = MaxentTagger("english-bidirectional-distsim.tagger")
+    var counter = 0
 
 
     fun getDocumentPOS(path: String): List<Word> {
         val words = ArrayList<Word>()
         val reader = BufferedReader(FileReader(path))
         val tokenizedText = MaxentTagger.tokenizeText(reader)
-        tokenizedText
-                .asSequence()
-                .map { tagger.tagSentence(it) }
-                .forEach { words.addAll(getWordsWithPos(it)) }
+
+        counter++
+        if (counter == 100)
+            tagger = MaxentTagger("english-bidirectional-distsim.tagger")
+        for (sentence in tokenizedText) {
+            if (sentence.size < 30) {
+                val taggedWords = tagger.tagSentence(sentence)
+                words.addAll(getWordsWithPos(taggedWords))
+            }
+
+        }
+//        tokenizedText
+//                .asSequence()
+//                .map { tagger.tagSentence(it) }
+//                .forEach { words.addAll(getWordsWithPos(it)) }
         return words
     }
 
@@ -82,6 +96,7 @@ class FeatureExtractor {
                 }
                 if (baseForms != null) {
                     word.text = baseForms.lemma
+                    baseForms = null
                     break
                 }
             }

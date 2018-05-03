@@ -3,7 +3,7 @@ import k_shingling.onehash.FeatureExtractor
 import lucene.LuceneIndex
 import java.io.File
 
-const val BASE_DIR = "E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21"
+const val BASE_DIR = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
 //const val BASE_DIR = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
 fun main(args : Array<String>) {
     var featureExtractor = FeatureExtractor()
@@ -72,6 +72,8 @@ fun main(args : Array<String>) {
         lucene.indexDocument(document, file.name)
 
         System.gc()
+        if (index % 100 == 0)
+            println()
         println(file.name)
     }
     DataSet.findHighIdfWords()
