@@ -3,7 +3,7 @@ import k_shingling.onehash.FeatureExtractor
 import lucene.LuceneIndex
 import java.io.File
 
-const val BASE_DIR = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
+const val BASE_DIR = "E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21"
 //const val BASE_DIR = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
 fun main(args : Array<String>) {
     var featureExtractor = FeatureExtractor()
@@ -101,9 +101,11 @@ fun main(args : Array<String>) {
     for (suspFile in featureExtractor.extractSuspNames(pairs.readLines())) {
         var file = File("$BASE_DIR\\susp\\$suspFile")
         println(file.name)
-        var document = featureExtractor.extractWords(file.readText())
+        var document = featureExtractor.getDocumentPOS(file.path)
+        //var data = featureExtractor.extractWords(file.readText())
         document = featureExtractor.normalizeDocument(document)
-        document.toMutableList().removeIf { item -> !DataSet.wordsSorted.contains(item.text) }
+        document = document.toMutableList()
+        document.removeIf { item -> !DataSet.wordsSorted.contains(item.text) }
 
         var totalFound = lucene.checkSuspiciousDocument(document)
 

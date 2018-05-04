@@ -42,7 +42,7 @@ class FeatureExtractor {
         if (counter == 100)
             tagger = MaxentTagger("english-bidirectional-distsim.tagger")
         for (sentence in tokenizedText) {
-            if (sentence.size < 30) {
+            if (sentence.size < 50) {
                 val taggedWords = tagger.tagSentence(sentence)
                 words.addAll(getWordsWithPos(taggedWords))
             }
@@ -59,7 +59,7 @@ class FeatureExtractor {
         val words = ArrayList<Word>()
         taggedWords
                 .asSequence()
-                .filterNot { stopWords.contains(it.word().toLowerCase()) }
+                .filterNot { stopWords.contains(it.word().toLowerCase()) || it.word().length < 2 || it.word().toIntOrNull() != null}
                 .mapTo(words) { Word(it.word(), it.beginPosition(), it.endPosition(), it.tag()) }
         return words
     }
