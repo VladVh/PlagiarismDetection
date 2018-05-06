@@ -1,6 +1,8 @@
 package stopwords
 
-class Word(var text:String = "", val start:Int = -1, val end:Int = -1, val tag:String = "") {
+import java.io.Serializable
+
+class Word(var text:String = "", val start:Int = -1, val end:Int = -1, val tag:String = ""): Serializable {
 
     override fun toString(): String {
         return text

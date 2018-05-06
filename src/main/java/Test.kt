@@ -1,9 +1,11 @@
 import k_shingling.onehash.DataSet
 import k_shingling.onehash.FeatureExtractor
 import lucene.LuceneIndex
-import java.io.File
+import stopwords.Word
+import java.io.*
 
-const val BASE_DIR = "E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21"
+
+const val BASE_DIR = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
 //const val BASE_DIR = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
 fun main(args : Array<String>) {
     var featureExtractor = FeatureExtractor()
@@ -59,12 +61,18 @@ fun main(args : Array<String>) {
 
 
     //lucene
-    var lucene = LuceneIndex()
+    var lucene = LuceneIndex(featureExtractor)
     var folder = File("$BASE_DIR\\src")
+
+    val out = FileInputStream("${BASE_DIR}\\serialization\\total.out")
+        val oos = ObjectInputStream(out)
+    val documents = oos.readObject() as ArrayList<List<Word>>
+        oos.close()
     //var folder = File("$BASE_DIR\\test")
     for ((index,file) in folder.listFiles().withIndex()) {
-        var document = featureExtractor.getDocumentPOS(file.path)
-        //var data = featureExtractor.extractWords(file.readText())
+        var document = documents[index]
+        documents.add(document)
+
         document = featureExtractor.normalizeDocument(document)
         var unique = document.distinctBy { word -> word.text }
 
@@ -76,6 +84,12 @@ fun main(args : Array<String>) {
             println()
         println(file.name)
     }
+//        val out = FileOutputStream("${BASE_DIR}\\serialization\\total.out")
+//        val oos = ObjectOutputStream(out)
+//        oos.writeObject(documents)
+//        oos.flush()
+//        oos.close()
+
     DataSet.findHighIdfWords()
 
 //    for (file in folder.listFiles()) {
@@ -105,7 +119,7 @@ fun main(args : Array<String>) {
         //var data = featureExtractor.extractWords(file.readText())
         document = featureExtractor.normalizeDocument(document)
         document = document.toMutableList()
-        document.removeIf { item -> !DataSet.wordsSorted.contains(item.text) }
+        //document.removeIf { item -> !DataSet.wordsSorted.contains(item.text) }
 
         var totalFound = lucene.checkSuspiciousDocument(document)
 

@@ -7,6 +7,7 @@ import edu.stanford.nlp.tagger.maxent.MaxentTaggerServer
 import net.didion.jwnl.JWNL
 import net.didion.jwnl.data.IndexWord
 import net.didion.jwnl.data.POS
+import net.didion.jwnl.data.Synset
 import net.didion.jwnl.dictionary.Dictionary
 import stopwords.Word
 import java.io.BufferedReader
@@ -64,6 +65,19 @@ class FeatureExtractor {
         return words
     }
 
+    fun getWordSynsets(word: Word): Array<out Synset>? {
+        return when {
+            word.tag.contains("VB") -> dictionary.getIndexWord(POS.VERB, word.text).senses
+            word.tag.contains("RB") -> dictionary.getIndexWord(POS.ADVERB, word.text).senses
+            word.tag.contains("JJ") -> dictionary.getIndexWord(POS.ADJECTIVE, word.text).senses
+            word.tag.contains("NN") -> dictionary.getIndexWord(POS.NOUN, word.text).senses
+            else -> {
+                return null
+            }
+        }
+
+    }
+
     fun extractWordFeatures(text: List<String>): Pair<Int, HashMap<String, Int>> {
         var totalWords = 0
         var wordCount = HashMap<String, Int>()
@@ -97,7 +111,6 @@ class FeatureExtractor {
                 if (baseForms != null) {
                     word.text = baseForms.lemma
                     baseForms = null
-                    break
                 }
             }
         }

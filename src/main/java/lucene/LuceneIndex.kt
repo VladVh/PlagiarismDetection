@@ -1,5 +1,6 @@
 package lucene
 
+import k_shingling.onehash.FeatureExtractor
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
@@ -21,7 +22,7 @@ import org.apache.lucene.search.spans.SpanTermQuery
 //    }
 //}
 
-class LuceneIndex {
+class LuceneIndex(val featureExtractor: FeatureExtractor) {
     private val analyzer: StandardAnalyzer = StandardAnalyzer()
     private val config: IndexWriterConfig
     private val index: Directory
@@ -90,33 +91,39 @@ class LuceneIndex {
 //        val term3 = Term("content", "simmers")
         println()
     }
+
     fun search(words: List<Word>): TopDocs? {
         indexReader = DirectoryReader.open(index)
         indexSearcher = IndexSearcher(indexReader)
 
         val spanQueries = arrayListOf<SpanQuery>()
-        words.forEach { spanQueries.add(SpanTermQuery(Term("content", it.text))) }
-        val spanComplexQuery = SpanNearQuery(spanQueries.toArray(arrayOf()), 100, false)
+
+        for (word in words) {
+            if (word.tag != "") {
+                val synsets = featureExtractor.getWordSynsets(word)
+                val subqueries = arrayListOf<SpanQuery>()
+                if (synsets != null) {
+                    val synonyms = arrayListOf<String>()
+                    for (synset in synsets) {
+                        synonyms.addAll(synset.words.map { it.lemma })
+                    }
+                    val unique = synonyms.distinct()
+                    for (str in unique) {
+                        val query = SpanTermQuery(Term("content", str))
+                        subqueries.add(query)
+                    }
+                    spanQueries.add(SpanOrQuery(*subqueries.toTypedArray()))
+                }
+            } else {
+                spanQueries.add(SpanTermQuery(Term("content", word.text)))
+            }
+        }
+        val spanComplexQuery = SpanNearQuery(spanQueries.toTypedArray(), 100, false)
+//        words.forEach { spanQueries.add(SpanTermQuery(Term("content", it.text))) }
+//        val spanComplexQuery = SpanNearQuery(spanQueries..toTypedArray(), 100, false)
         return indexSearcher.search(spanComplexQuery, 100)
-//        var intersection: ArrayList<Int>? = null
-//        for (word in words) {
-//            var spanQuery:SpanQuery = SpanTermQuery(Term("content", word.text))
-//            val results = indexSearcher.search(spanQuery, 10000)
-//
-//            if (results.totalHits > 0) {
-//                if (intersection == null) {
-//                    intersection = ArrayList()
-//                    intersection.addAll(results.scoreDocs.map { it.doc })
-//                } else {
-//                    intersection.removeIf { it -> results.scoreDocs.none { item -> item.doc == it } }
-//                }
-//            }
-//        }
-//
-//        var leaves = indexReader.leaves()
-//        val ctx = leaves[0]
-        //val spanWeight = spanQuery.createWeight(indexSearcher, false, 1.0F)
     }
+
 
 
     fun search(query: Query): TopDocs? {
@@ -127,7 +134,7 @@ class LuceneIndex {
 
     fun checkSuspiciousDocument(words: List<Word>):List<String> {
         var wordsList = words
-        val instanceSize = 15
+        val instanceSize = 10
 
         val found = ArrayList<String>()
         var start = -1
@@ -184,7 +191,7 @@ class LuceneIndex {
 //                    end = paragraph.last().end
 //                }
             }
-            wordsList = wordsList.drop(5)
+            wordsList = wordsList.drop(3)
         }
         if (start != -1) {
             println("$start $end $sourceDocs")
