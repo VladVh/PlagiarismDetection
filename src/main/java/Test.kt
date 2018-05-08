@@ -5,13 +5,14 @@ import stopwords.Word
 import java.io.*
 
 
-const val BASE_DIR = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
+const val BASE_DIR = "E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21"
 //const val BASE_DIR = "D:\\Навчання\\Диплом\\pan13-text-alignment-training-corpus-2013-01-21"
 fun main(args : Array<String>) {
     var featureExtractor = FeatureExtractor()
 //    DataSet.deserialize()
 //    println(DataSet.collection.size)
-    var pairs = File("$BASE_DIR\\03-random-obfuscation\\pairs")
+    println(File("${BASE_DIR}\\serialization").exists())
+    var pairs = File("$BASE_DIR\\02-no-obfuscation\\pairs")
 //    var sourceFiles = FeatureExtractor.extractSourceNames(pairs.readLines())
 //    for (file in sourceFiles) {
 //        var path = "$BASE_DIR\\src\\$file"
@@ -64,24 +65,25 @@ fun main(args : Array<String>) {
     var lucene = LuceneIndex(featureExtractor)
     var folder = File("$BASE_DIR\\src")
 
-    val out = FileInputStream("${BASE_DIR}\\serialization\\total.out")
+    val out = FileInputStream("$BASE_DIR\\serialization\\total.out")
         val oos = ObjectInputStream(out)
     val documents = oos.readObject() as ArrayList<List<Word>>
         oos.close()
+    //val documents = ArrayList<List<Word>>()
     //var folder = File("$BASE_DIR\\test")
     for ((index,file) in folder.listFiles().withIndex()) {
+//        var document = featureExtractor.getDocumentPOS(file.path)
+//        document = featureExtractor.normalizeDocument(document)
+//        documents.add(document)
         var document = documents[index]
-        documents.add(document)
 
-        document = featureExtractor.normalizeDocument(document)
         var unique = document.distinctBy { word -> word.text }
-
         DataSet.addWords(unique)
-        lucene.indexDocument(document, file.name)
-
-        System.gc()
+//        lucene.indexDocument(document, file.name)
+//
+//        System.gc()
         if (index % 100 == 0)
-            println()
+//            println()
         println(file.name)
     }
 //        val out = FileOutputStream("${BASE_DIR}\\serialization\\total.out")
@@ -89,7 +91,7 @@ fun main(args : Array<String>) {
 //        oos.writeObject(documents)
 //        oos.flush()
 //        oos.close()
-
+//
     DataSet.findHighIdfWords()
 
 //    for (file in folder.listFiles()) {

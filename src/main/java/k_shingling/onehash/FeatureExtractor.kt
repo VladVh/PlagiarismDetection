@@ -61,16 +61,16 @@ class FeatureExtractor {
         taggedWords
                 .asSequence()
                 .filterNot { stopWords.contains(it.word().toLowerCase()) || it.word().length < 2 || it.word().toIntOrNull() != null}
-                .mapTo(words) { Word(it.word(), it.beginPosition(), it.endPosition(), it.tag()) }
+                .mapTo(words) { Word(it.word().toLowerCase(), it.beginPosition(), it.endPosition(), it.tag()) }
         return words
     }
 
     fun getWordSynsets(word: Word): Array<out Synset>? {
         return when {
-            word.tag.contains("VB") -> dictionary.getIndexWord(POS.VERB, word.text).senses
-            word.tag.contains("RB") -> dictionary.getIndexWord(POS.ADVERB, word.text).senses
-            word.tag.contains("JJ") -> dictionary.getIndexWord(POS.ADJECTIVE, word.text).senses
-            word.tag.contains("NN") -> dictionary.getIndexWord(POS.NOUN, word.text).senses
+            word.tag.contains("VB") -> dictionary.getIndexWord(POS.VERB, word.text)?.senses
+            word.tag.contains("RB") -> dictionary.getIndexWord(POS.ADVERB, word.text)?.senses
+            word.tag.contains("JJ") -> dictionary.getIndexWord(POS.ADJECTIVE, word.text)?.senses
+            word.tag.contains("NN") -> dictionary.getIndexWord(POS.NOUN, word.text)?.senses
             else -> {
                 return null
             }

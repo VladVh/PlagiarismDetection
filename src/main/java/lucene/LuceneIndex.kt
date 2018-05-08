@@ -14,6 +14,10 @@ import org.apache.lucene.store.RAMDirectory
 import stopwords.Word
 import org.apache.lucene.search.spans.SpanWeight
 import org.apache.lucene.search.spans.SpanTermQuery
+import org.apache.lucene.store.FSDirectory
+import org.apache.lucene.store.MMapDirectory
+import java.io.File
+import java.nio.file.Path
 
 
 //class MyFldType: FieldType() {
@@ -29,9 +33,11 @@ class LuceneIndex(val featureExtractor: FeatureExtractor) {
     private val indexWriter: IndexWriter
     private lateinit var indexReader: IndexReader
     private lateinit var indexSearcher: IndexSearcher
+
     init {
-        config = IndexWriterConfig( analyzer)
-        index = RAMDirectory()
+        config = IndexWriterConfig(analyzer)
+        config.openMode = IndexWriterConfig.OpenMode.APPEND
+        index = MMapDirectory(File("E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21\\indexing").toPath())
         indexWriter = IndexWriter(index, config)
     }
 
@@ -60,10 +66,10 @@ class LuceneIndex(val featureExtractor: FeatureExtractor) {
         indexReader = DirectoryReader.open(index)
         indexSearcher = IndexSearcher(indexReader)
 
-        var spanQuery:SpanQuery = SpanTermQuery(Term("content", "find"))
+        var spanQuery: SpanQuery = SpanTermQuery(Term("content", "find"))
 
 
-        var complexQuery = SpanNearQuery( arrayOf(
+        var complexQuery = SpanNearQuery(arrayOf(
                 SpanTermQuery(Term("content", "find")),
                 SpanTermQuery(Term("content", "council")),
                 SpanTermQuery(Term("content", "met")),
@@ -99,31 +105,29 @@ class LuceneIndex(val featureExtractor: FeatureExtractor) {
         val spanQueries = arrayListOf<SpanQuery>()
 
         for (word in words) {
-            if (word.tag != "") {
-                val synsets = featureExtractor.getWordSynsets(word)
+            val synsets = featureExtractor.getWordSynsets(word)
+            if (synsets != null) {
                 val subqueries = arrayListOf<SpanQuery>()
-                if (synsets != null) {
-                    val synonyms = arrayListOf<String>()
-                    for (synset in synsets) {
-                        synonyms.addAll(synset.words.map { it.lemma })
-                    }
-                    val unique = synonyms.distinct()
-                    for (str in unique) {
-                        val query = SpanTermQuery(Term("content", str))
-                        subqueries.add(query)
-                    }
-                    spanQueries.add(SpanOrQuery(*subqueries.toTypedArray()))
+                val synonyms = arrayListOf<String>()
+                for (synset in synsets) {
+                    synonyms.addAll(synset.words.map { it.lemma })
                 }
+                val unique = synonyms.distinct()
+                for (str in unique) {
+                    val query = SpanTermQuery(Term("content", str))
+                    subqueries.add(query)
+                }
+                spanQueries.add(SpanOrQuery(*subqueries.toTypedArray()))
+
             } else {
                 spanQueries.add(SpanTermQuery(Term("content", word.text)))
             }
         }
-        val spanComplexQuery = SpanNearQuery(spanQueries.toTypedArray(), 100, false)
+        val spanComplexQuery = SpanNearQuery(spanQueries.toTypedArray(), 80, false)
 //        words.forEach { spanQueries.add(SpanTermQuery(Term("content", it.text))) }
 //        val spanComplexQuery = SpanNearQuery(spanQueries..toTypedArray(), 100, false)
         return indexSearcher.search(spanComplexQuery, 100)
     }
-
 
 
     fun search(query: Query): TopDocs? {
@@ -132,15 +136,15 @@ class LuceneIndex(val featureExtractor: FeatureExtractor) {
         return indexSearcher.search(query, 100000)
     }
 
-    fun checkSuspiciousDocument(words: List<Word>):List<String> {
+    fun checkSuspiciousDocument(words: List<Word>): List<String> {
         var wordsList = words
-        val instanceSize = 10
+        val instanceSize = 15
 
         val found = ArrayList<String>()
         var start = -1
         var end = 0
-        var sourceDocs:List<String> = ArrayList<String>()
-        while (wordsList.size > 7) {
+        var sourceDocs: List<String> = ArrayList<String>()
+        while (wordsList.size > 10) {
             val paragraph: List<Word> = if (wordsList.size > instanceSize)
                 wordsList.take(instanceSize)
             else {
@@ -148,7 +152,7 @@ class LuceneIndex(val featureExtractor: FeatureExtractor) {
             }
 
             //val query = createQuery(paragraph.subList(0,7))
-            val results = search(paragraph.subList(0, 6))
+            val results = search(paragraph.subList(0, 9))
             //val results = search(query)
             if (results?.totalHits ?: 0 > 0) {
                 var docs = extractDocsByIds(results?.scoreDocs!!)
@@ -191,7 +195,7 @@ class LuceneIndex(val featureExtractor: FeatureExtractor) {
 //                    end = paragraph.last().end
 //                }
             }
-            wordsList = wordsList.drop(3)
+            wordsList = wordsList.drop(2)
         }
         if (start != -1) {
             println("$start $end $sourceDocs")
@@ -206,7 +210,7 @@ class LuceneIndex(val featureExtractor: FeatureExtractor) {
         return results
     }
 
-    fun createQuery (words : List<Word>):Query {
+    fun createQuery(words: List<Word>): Query {
         var queryString = "${words[0].text}:${words[0].text}"
         for (i in 1 until words.size) {
             queryString = queryString.plus(" AND ${words[i].text}:${words[i].text}")
