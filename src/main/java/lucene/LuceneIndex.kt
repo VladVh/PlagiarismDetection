@@ -36,8 +36,8 @@ class LuceneIndex(val featureExtractor: FeatureExtractor) {
 
     init {
         config = IndexWriterConfig(analyzer)
-        config.openMode = IndexWriterConfig.OpenMode.APPEND
-        index = MMapDirectory(File("E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21\\indexing").toPath())
+        config.openMode = IndexWriterConfig.OpenMode.CREATE_OR_APPEND
+        index = MMapDirectory(File("E:\\Intellij projects\\pan13-text-alignment-training-corpus-2013-01-21\\indexing2").toPath())
         indexWriter = IndexWriter(index, config)
     }
 
@@ -123,7 +123,7 @@ class LuceneIndex(val featureExtractor: FeatureExtractor) {
                 spanQueries.add(SpanTermQuery(Term("content", word.text)))
             }
         }
-        val spanComplexQuery = SpanNearQuery(spanQueries.toTypedArray(), 80, false)
+        val spanComplexQuery = SpanNearQuery(spanQueries.toTypedArray(), 30, false)
 //        words.forEach { spanQueries.add(SpanTermQuery(Term("content", it.text))) }
 //        val spanComplexQuery = SpanNearQuery(spanQueries..toTypedArray(), 100, false)
         return indexSearcher.search(spanComplexQuery, 100)
@@ -152,7 +152,7 @@ class LuceneIndex(val featureExtractor: FeatureExtractor) {
             }
 
             //val query = createQuery(paragraph.subList(0,7))
-            val results = search(paragraph.subList(0, 9))
+            val results = search(paragraph.subList(0, 6))
             //val results = search(query)
             if (results?.totalHits ?: 0 > 0) {
                 var docs = extractDocsByIds(results?.scoreDocs!!)

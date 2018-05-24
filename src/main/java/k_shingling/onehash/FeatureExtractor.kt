@@ -42,8 +42,9 @@ class FeatureExtractor {
         counter++
         if (counter == 100)
             tagger = MaxentTagger("english-bidirectional-distsim.tagger")
+
         for (sentence in tokenizedText) {
-            if (sentence.size < 50) {
+            if (sentence.size < 90) {
                 val taggedWords = tagger.tagSentence(sentence)
                 words.addAll(getWordsWithPos(taggedWords))
             }
